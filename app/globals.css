@@ -1572,6 +1572,12 @@ body {
   display: block;
 }
 
+.footerLogoImage {
+  width: auto;
+  /* height: 44px; */
+  display: block;
+}
+
 @media (max-width: 980px) {
   .footerTop {
     min-height: 0;
@@ -1585,6 +1591,10 @@ body {
   .footerTrust {
     position: static;
     transform: none;
+  }
+
+  .footerLogoImage {
+    height: 40px;
   }
 }
 

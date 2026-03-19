@@ -10,13 +10,15 @@ export function Footer() {
       <Container className="footerInner">
         <div className="footerTop">
           <div className="footerBrandBlock">
-            <div className="footerBrandRow">
-              {/* <div className="footerBrandMark">L</div> */}
-              <div className="footerBrandTextWrap">
-                <div className="footerBrand">LIBERTY</div>
-                {/* <div className="footerBrandSub">LENDING WALLET</div> */}
-              </div>
-            </div>
+            <Link href="/" className="footerBrandRow" aria-label="Easy Lending Today">
+              <Image
+                src="/images/logo.png"
+                alt="Easy Lending Today"
+                width={250}
+                height={50}
+                className="footerLogoImage"
+              />
+            </Link>
           </div>
 
           <div className="footerTrust">

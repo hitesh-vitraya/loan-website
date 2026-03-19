@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ResultSetHeader } from "mysql2";
 
 import {
   ApplicationFormData,
@@ -7,14 +6,21 @@ import {
   isLoanAmountValid
 } from "../../../lib/application-form";
 import { submitLeadApi } from "../../../lib/lead-api";
-import { getMysqlPool } from "../../../lib/mysql";
+import { getSafeMongoCollectionName } from "../../../lib/mongo-collection-name";
+import { getMongoCollection } from "../../../lib/mongodb";
 import { lookupUsZip } from "../../../lib/us-zip";
 
-const configuredTableName = process.env.MYSQL_APPLICATIONS_TABLE ?? "loan_applications";
-const tableName = /^[A-Za-z0-9_]+$/.test(configuredTableName)
-  ? configuredTableName
-  : "loan_applications";
-const logsTableName = "loan_application_api_logs";
+const configuredCollectionName = process.env.MONGODB_APPLICATIONS_COLLECTION ?? "loan_applications";
+const applicationsCollectionName = getSafeMongoCollectionName(
+  configuredCollectionName,
+  "loan_applications"
+);
+const configuredLogsCollectionName =
+  process.env.MONGODB_APPLICATION_LOGS_COLLECTION ?? "loan_application_api_logs";
+const logsCollectionName = getSafeMongoCollectionName(
+  configuredLogsCollectionName,
+  "loan_application_api_logs"
+);
 
 function getClientIp(request: NextRequest) {
   const forwardedFor = request.headers.get("x-forwarded-for");
@@ -67,7 +73,8 @@ export async function POST(request: NextRequest) {
 
     const userAgent = request.headers.get("user-agent") ?? "";
     const ipAddress = getClientIp(request);
-    const pool = getMysqlPool();
+    const applicationsCollection = await getMongoCollection(applicationsCollectionName);
+    const logsCollection = await getMongoCollection(logsCollectionName);
     const location = await lookupUsZip(formData.zipCode);
 
     if (!location) {
@@ -88,71 +95,40 @@ export async function POST(request: NextRequest) {
       state: location.state
     };
 
-    const [insertResult] = await pool.execute<ResultSetHeader>(
-      `INSERT INTO ${tableName} (
-        loan_amount,
-        loan_purpose,
-        zip_code,
-        city,
-        state,
-        credit_score,
-        employment_status,
-        pay_frequency,
-        monthly_income,
-        housing_status,
-        has_checking_account,
-        has_direct_deposit,
-        has_vehicle_registration,
-        military_affiliation,
-        unsecured_debt,
-        first_name,
-        last_name,
-        email,
-        phone_number,
-        phone_consent,
-        date_of_birth,
-        street_address,
-        ssn,
-        user_agent,
-        ip_address,
-        lead_api_status,
-        lead_api_http_status,
-        lead_api_last_error,
-        created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [
-        enrichedFormData.loanAmount || null,
-        enrichedFormData.loanPurpose,
-        enrichedFormData.zipCode,
-        enrichedFormData.city,
-        enrichedFormData.state,
-        enrichedFormData.creditScore,
-        enrichedFormData.employmentStatus,
-        enrichedFormData.payFrequency,
-        enrichedFormData.monthlyIncome,
-        enrichedFormData.housingStatus,
-        enrichedFormData.hasCheckingAccount,
-        enrichedFormData.hasDirectDeposit,
-        enrichedFormData.hasVehicleRegistration,
-        enrichedFormData.militaryAffiliation,
-        enrichedFormData.unsecuredDebt,
-        enrichedFormData.firstName.trim(),
-        enrichedFormData.lastName.trim(),
-        enrichedFormData.email.trim(),
-        enrichedFormData.phoneNumber,
-        enrichedFormData.phoneConsent ? 1 : 0,
-        enrichedFormData.dateOfBirth,
-        enrichedFormData.streetAddress.trim(),
-        enrichedFormData.ssn,
-        userAgent,
-        ipAddress,
-        "pending",
-        null,
-        null
-      ]
-    );
+    const insertResult = await applicationsCollection.insertOne({
+      loanAmount: enrichedFormData.loanAmount || null,
+      loanPurpose: enrichedFormData.loanPurpose,
+      zipCode: enrichedFormData.zipCode,
+      city: enrichedFormData.city,
+      state: enrichedFormData.state,
+      creditScore: enrichedFormData.creditScore,
+      employmentStatus: enrichedFormData.employmentStatus,
+      payFrequency: enrichedFormData.payFrequency,
+      monthlyIncome: enrichedFormData.monthlyIncome,
+      housingStatus: enrichedFormData.housingStatus,
+      hasCheckingAccount: enrichedFormData.hasCheckingAccount,
+      hasDirectDeposit: enrichedFormData.hasDirectDeposit,
+      hasVehicleRegistration: enrichedFormData.hasVehicleRegistration,
+      militaryAffiliation: enrichedFormData.militaryAffiliation,
+      unsecuredDebt: enrichedFormData.unsecuredDebt,
+      firstName: enrichedFormData.firstName.trim(),
+      lastName: enrichedFormData.lastName.trim(),
+      email: enrichedFormData.email.trim(),
+      phoneNumber: enrichedFormData.phoneNumber,
+      phoneConsent: enrichedFormData.phoneConsent,
+      dateOfBirth: enrichedFormData.dateOfBirth,
+      streetAddress: enrichedFormData.streetAddress.trim(),
+      ssn: enrichedFormData.ssn,
+      userAgent,
+      ipAddress,
+      leadApiStatus: "pending",
+      leadApiHttpStatus: null,
+      leadApiLastError: null,
+      createdAt: new Date()
+    });
 
-    const applicationId = insertResult.insertId;
+    const applicationId = insertResult.insertedId;
+    const applicationIdString = applicationId.toHexString();
 
     let leadApiResult:
       | {
@@ -170,76 +146,65 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown lead API error.";
 
-      await pool.execute(
-        `INSERT INTO ${logsTableName} (
-          application_id,
-          api_name,
-          request_body,
-          response_body,
-          response_http_status,
-          was_successful,
-          duration_ms,
-          created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-        [applicationId, "cashcorner-generic-postlead", "{}", errorMessage, 0, 0, 0]
-      );
+      await logsCollection.insertOne({
+        applicationId,
+        apiName: "cashcorner-generic-postlead",
+        requestBody: {},
+        responseBody: errorMessage,
+        responseHttpStatus: 0,
+        wasSuccessful: false,
+        durationMs: 0,
+        createdAt: new Date()
+      });
 
-      await pool.execute(
-        `UPDATE ${tableName}
-         SET lead_api_status = ?, lead_api_http_status = ?, lead_api_last_error = ?
-         WHERE id = ?`,
-        ["failed", 0, errorMessage, applicationId]
+      await applicationsCollection.updateOne(
+        { _id: applicationId },
+        {
+          $set: {
+            leadApiStatus: "failed",
+            leadApiHttpStatus: 0,
+            leadApiLastError: errorMessage
+          }
+        }
       );
 
       return NextResponse.json(
         {
           error: "Lead saved locally but external API submission failed.",
-          applicationId,
+          applicationId: applicationIdString,
           details: process.env.NODE_ENV === "development" ? errorMessage : undefined
         },
         { status: 502 }
       );
     }
 
-    await pool.execute(
-      `INSERT INTO ${logsTableName} (
-        application_id,
-        api_name,
-        request_body,
-        response_body,
-        response_http_status,
-        was_successful,
-        duration_ms,
-        created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [
-        applicationId,
-        "cashcorner-generic-postlead",
-        JSON.stringify(leadApiResult.requestPayload),
-        leadApiResult.responseBody,
-        leadApiResult.status,
-        leadApiResult.ok ? 1 : 0,
-        leadApiResult.durationMs
-      ]
-    );
+    await logsCollection.insertOne({
+      applicationId,
+      apiName: "cashcorner-generic-postlead",
+      requestBody: leadApiResult.requestPayload,
+      responseBody: leadApiResult.responseBody,
+      responseHttpStatus: leadApiResult.status,
+      wasSuccessful: leadApiResult.ok,
+      durationMs: leadApiResult.durationMs,
+      createdAt: new Date()
+    });
 
-    await pool.execute(
-      `UPDATE ${tableName}
-       SET lead_api_status = ?, lead_api_http_status = ?, lead_api_last_error = ?
-       WHERE id = ?`,
-      [
-        leadApiResult.ok ? "success" : "failed",
-        leadApiResult.status,
-        leadApiResult.ok ? null : leadApiResult.responseBody,
-        applicationId
-      ]
+    await applicationsCollection.updateOne(
+      { _id: applicationId },
+      {
+        $set: {
+          leadApiStatus: leadApiResult.ok ? "success" : "failed",
+          leadApiHttpStatus: leadApiResult.status,
+          leadApiLastError: leadApiResult.ok ? null : leadApiResult.responseBody
+        }
+      }
     );
 
     if (!leadApiResult.ok) {
       return NextResponse.json(
         {
           error: "Lead saved locally but external API submission failed.",
-          applicationId,
+          applicationId: applicationIdString,
           leadApi: {
             ok: leadApiResult.ok,
             status: leadApiResult.status,
@@ -252,7 +217,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      applicationId,
+      applicationId: applicationIdString,
       leadApi: {
         ok: leadApiResult.ok,
         status: leadApiResult.status,

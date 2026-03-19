@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ResultSetHeader } from "mysql2";
 
-import { getMysqlPool } from "../../../lib/mysql";
+import { getSafeMongoCollectionName } from "../../../lib/mongo-collection-name";
+import { getMongoCollection } from "../../../lib/mongodb";
 
-const configuredTableName = process.env.MYSQL_CONTACT_TABLE ?? "contact_messages";
-const tableName = /^[A-Za-z0-9_]+$/.test(configuredTableName)
-  ? configuredTableName
-  : "contact_messages";
+const configuredCollectionName = process.env.MONGODB_CONTACT_COLLECTION ?? "contact_messages";
+const collectionName = getSafeMongoCollectionName(configuredCollectionName, "contact_messages");
 
 function getClientIp(request: NextRequest) {
   const forwardedFor = request.headers.get("x-forwarded-for");
@@ -48,19 +46,16 @@ export async function POST(request: NextRequest) {
 
     const userAgent = request.headers.get("user-agent") ?? "";
     const ipAddress = getClientIp(request);
-    const pool = getMysqlPool();
+    const collection = await getMongoCollection(collectionName);
 
-    await pool.execute<ResultSetHeader>(
-      `INSERT INTO ${tableName} (
-        full_name,
-        email,
-        message,
-        user_agent,
-        ip_address,
-        created_at
-      ) VALUES (?, ?, ?, ?, ?, NOW())`,
-      [fullName, email, message, userAgent, ipAddress]
-    );
+    await collection.insertOne({
+      fullName,
+      email,
+      message,
+      userAgent,
+      ipAddress,
+      createdAt: new Date()
+    });
 
     return NextResponse.json({ ok: true });
   } catch (error) {

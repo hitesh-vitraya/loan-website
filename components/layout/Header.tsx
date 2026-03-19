@@ -13,8 +13,8 @@ export function Header() {
           <Image
             src="/images/logo.png"
             alt="Easy Lending Today"
-            width={160}
-            height={44}
+            width={220}
+            height={50}
             priority
             className="siteLogoImage"
           />
