@@ -1,8 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
-import { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, useMemo, useState } from "react";
 
 import { applicationSteps } from "../../data/application";
 import {
@@ -18,10 +17,16 @@ import styles from "./ApplicationWizard.module.css";
 
 type FieldErrors = Partial<Record<keyof ApplicationFormData, string>>;
 
-export function ApplicationWizard() {
-  const searchParams = useSearchParams();
+type ApplicationWizardProps = {
+  initialLoanAmount?: string;
+};
+
+export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps) {
   const [stepIndex, setStepIndex] = useState(0);
-  const [formState, setFormState] = useState<ApplicationFormData>(initialApplicationFormState);
+  const [formState, setFormState] = useState<ApplicationFormData>(() => ({
+    ...initialApplicationFormState,
+    loanAmount: initialLoanAmount ?? initialApplicationFormState.loanAmount
+  }));
   const [submitted, setSubmitted] = useState(false);
   const [attemptedSteps, setAttemptedSteps] = useState<Record<number, boolean>>({});
   const [submitError, setSubmitError] = useState("");
@@ -29,18 +34,6 @@ export function ApplicationWizard() {
   const [asyncFieldErrors, setAsyncFieldErrors] = useState<FieldErrors>({});
 
   const step = applicationSteps[stepIndex];
-
-  useEffect(() => {
-    const loanAmount = searchParams.get("amount");
-
-    if (!loanAmount) {
-      return;
-    }
-
-    setFormState((current) =>
-      current.loanAmount === loanAmount ? current : { ...current, loanAmount }
-    );
-  }, [searchParams]);
 
   const completedFieldCount = useMemo(
     () => getCompletedApplicationFieldCount(formState),
