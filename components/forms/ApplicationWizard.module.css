@@ -1,0 +1,268 @@
+.pageSection {
+  background: #ededeb;
+  padding: 36px 0 40px;
+}
+
+.shell {
+  max-width: 482px;
+  margin: 0 auto;
+  border: 1px solid rgba(39, 77, 63, 0.14);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #d7f0d1 0%, #eff3ed 100%);
+  padding: 14px 16px 16px;
+  box-shadow: 0 10px 24px rgba(71, 83, 77, 0.08);
+}
+
+.progressCard {
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.78);
+  padding: 10px 12px 12px;
+}
+
+.progressCaption {
+  margin: 0;
+  text-align: center;
+  color: #8b9490;
+  font-size: 10px;
+}
+
+.progressValue {
+  margin: 2px 0 0;
+  text-align: center;
+  color: #2f5a4a;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.progressTrack {
+  height: 7px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: #d8d8d8;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 999px;
+  background: #2f6a55;
+  transition: width 220ms linear;
+}
+
+.body {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.iconWrap {
+  display: flex;
+  width: 38px;
+  height: 38px;
+  margin: 0 auto 12px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(39, 77, 63, 0.08);
+}
+
+.title {
+  margin: 0;
+  color: #2f3d38;
+  font-size: 19px;
+  font-weight: 500;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  color: #737c78;
+  font-size: 12px;
+}
+
+.fieldGroup {
+  margin-top: 14px;
+  text-align: left;
+}
+
+.fieldLabel {
+  display: block;
+  margin: 0 0 6px;
+  text-align: left;
+  color: #3a4742;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.input,
+.select {
+  width: 100%;
+  height:40px;
+  border: 1px solid rgba(39, 77, 63, 0.08);
+  border-radius: 4px;
+  background: #f1efef;
+  padding: 9px 10px;
+  color: #3d4541;
+  font-size: 12px;
+  outline: none;
+}
+
+.stack {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.choiceButton {
+  width: 100%;
+  border: 1px solid rgba(39, 77, 63, 0.08);
+  border-radius: 4px;
+  background: #f1efef;
+  padding: 10px 12px;
+  color: #616966;
+  font-size: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.choiceButtonActive {
+  border-color: #2f6a55;
+  background: rgba(47, 106, 85, 0.11);
+  color: #214e3d;
+}
+
+.choiceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.choiceGridThree {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.choiceGridButton {
+  width: 100%;
+  border: 1px solid rgba(39, 77, 63, 0.08);
+  border-radius: 4px;
+  background: #f1efef;
+  padding: 9px 8px;
+  color: #616966;
+  font-size: 9px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.choiceGridButtonActive {
+  border-color: #2f6a55;
+  background: rgba(47, 106, 85, 0.11);
+  color: #214e3d;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.backButton,
+.continueButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 118px;
+  border-radius: 999px;
+  padding: 11px 16px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.backButton {
+  border: 1px solid #2f6a55;
+  background: transparent;
+  color: #203e32;
+}
+
+.continueButton {
+  border: 1px solid #2f6a55;
+  background: #2f6a55;
+  color: #fff;
+}
+
+.continueButton:disabled,
+.backButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.continueButtonDisabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.microcopy {
+  margin-top: 20px;
+  text-align: center;
+  color: #8a918e;
+  font-size: 10px;
+}
+
+.fieldError {
+  margin: 6px 0 0;
+  color: #b42318;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.submitError {
+  margin: 16px 0 0;
+  color: #b42318;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.checkboxRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  color: #79817d;
+  font-size: 8px;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.checkboxRow input {
+  margin-top: 1px;
+}
+
+.ssnNotice {
+  margin: 10px 0 0;
+  color: #7d8581;
+  font-size: 8px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.successCard {
+  padding: 18px 14px 8px;
+  text-align: center;
+}
+
+.successTitle {
+  margin: 0;
+  color: #214e3d;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.successBody {
+  margin: 8px 0 0;
+  color: #62706a;
+  font-size: 11px;
+}
