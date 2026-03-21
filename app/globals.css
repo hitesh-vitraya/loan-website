@@ -388,6 +388,44 @@ img {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.stepsDots {
+  display: none;
+}
+
+.stepsDot {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(47, 90, 74, 0.18);
+  transition: transform 180ms ease, background-color 180ms ease;
+}
+
+.stepsDot.is-active {
+  background: #2f6b57;
+  transform: scale(1.05);
+}
+
+.stepIconTile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(66, 74, 70, 0.08);
+}
+
+.stepsCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.stepsCardTitle {
+  max-width: none;
+}
+
 .panelCard,
 .featureCard {
   border: 1px solid var(--color-line);
@@ -837,7 +875,9 @@ img {
 .sectionRail {
   max-width: 1080px;
 }
-
+.siteLogoImage{
+    width:250px;
+  }
 .button {
   display: inline-flex;
   align-items: center;
@@ -1384,7 +1424,7 @@ img {
   margin-top: 14px;
   color: #747c78;
   font-size: 0.8rem;
-  letter-spacing: 0.18em;
+  /* letter-spacing: 0.18em;*/
 }
 .footerBottomNote {
   margin-top: 18px;
@@ -1458,15 +1498,21 @@ img {
   }
 
   .headerInner {
-    min-height: 64px;
+    min-height: 55px;
   }
-
+  .siteLogo{
+    line-height: unset;
+  }
   .headerActions {
     display: none;
   }
 
   .heroTitle {
-    font-size: 2rem;
+    font-size: 1.8rem;
+  }
+  .siteLogoImage{
+    width:150px;
+    margin-top: 10px;
   }
 
   .heroVisual {
@@ -1476,7 +1522,11 @@ img {
   .heroOverlay {
     left: 16px;
     top: 16px;
-    max-width: 290px;
+    max-width: 90%;
+    text-align: center;
+  }
+  .heroDescription {
+        font-size: 10px;
   }
 
   .heroPill {
@@ -1486,8 +1536,13 @@ img {
 
   .qualifierCard {
     width: 270px;
+    padding:10px;
+    margin-top:5px;
+    margin: 5px auto;
   }
-
+ .heroBackdrop{
+  height:450px;
+ }
   .qualifierTitle {
     font-size: 13px;
   }
@@ -1515,6 +1570,72 @@ img {
     padding: 10px 12px;
   }
 
+  #about{
+    margin-top:80px;
+  }
+  .sectionTitle{
+    font-size: 1.8rem;
+  }
+  .sectionDescription{
+    font-size: 11px;
+  }
+
+  .stepsGrid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(272px, 84%);
+    gap: 14px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 20px;
+    padding: 0 20px 8px;
+    margin: 28px -20px 0;
+    scrollbar-width: none;
+  }
+
+  .stepsGrid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .stepsCard {
+    min-height: 190px;
+    padding: 22px 22px 20px;
+    border: 1px solid rgba(40, 95, 75, 0.48);
+    border-radius: 28px;
+    background: #f7f7f3;
+    box-shadow: none;
+    scroll-snap-align: start;
+  }
+
+  .stepIconTile img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .stepsCardTitle {
+    margin-top: 18px;
+    max-width: none;
+    font-size: 1.05rem;
+    line-height: 1.42;
+    text-align: left;
+    letter-spacing: -0.02em;
+    word-break: normal;
+    overflow-wrap: normal;
+  }
+
+  .stepsDots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .stepsDot {
+    width: 10px;
+    height: 10px;
+  }
+
   .stepsSection,
   .featuresSection,
   .faqSection,
@@ -1523,13 +1644,60 @@ img {
     padding-top: 48px;
     padding-bottom: 32px;
   }
-
-  .ctaTitle {
-    font-size: 2.7rem;
+  .featureTitle{
+    font-size: 20px;
+    margin: 20px 0 0;
   }
+  .featureBody{
+    font-size: 11px;
+  }
+  .iconBadge{
+    width: 40px;
+    height:40px;
+  }
+  .featureCard{
+    min-height: 10px;
+    padding: 10px 10px 10px;
+  }
+  .faqSection{
+    padding-top:15px;
+  }
+  .faqTrigger {
+    font-size: 0.9rem;
+  }
+  .faqAnswer{
+    font-size:0.8rem ;
+  }
+  .ctaTitle {
+    font-size: 1.8rem;
+  }
+  .ctaSection .ctaButton {
+    font-size: 12px;
+}
 
   .footerTrust {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: 10px;
+  }
+  .footerTrust img {
+    width: 104px;
+    height: auto;
+  }
+  .footerAddress{
+    font-size: 11px;
+    margin-top:10px;
+  }
+  .footerLinks{
+    font-size: 13px;
+  }
+  .footerDisclaimer{
+    font-size: 11px;
+    text-align: justify;
+  }
+  .footerCopyright,.footerBottomNote{
+    font-size: 11px;
   }
 }
 
@@ -1547,6 +1715,190 @@ body {
   position: relative;
   width: 100%;
   min-height: 56px;
+}
+
+.siteHeader {
+  position: relative;
+  z-index: 30;
+}
+
+.mobileMenuButton {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  
+}
+
+.mobileMenuButton span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 999px;
+  background: #1f2622;
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.mobileMenuButton.is-open span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.mobileMenuButton.is-open span:nth-child(2) {
+  opacity: 0;
+}
+
+.mobileMenuButton.is-open span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+.mobileMenuPanel {
+  display: none;
+}
+
+.mobileMenuBackdrop {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .mobileMenuButton {
+    display: inline-flex;
+    position: relative;
+    z-index: 42;
+  }
+
+  .mobileMenuBackdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 39;
+    background: rgba(17, 24, 21, 0.38);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms ease;
+    backdrop-filter: blur(8px);
+  }
+
+  .mobileMenuBackdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .mobileMenuPanel {
+    position: fixed;
+    top: 84px;
+    left: 16px;
+    right: 16px;
+    z-index: 40;
+    display: block;
+    opacity: 0;
+    transform: translateY(-14px) scale(0.98);
+    pointer-events: none;
+    transition: opacity 220ms ease, transform 220ms ease;
+  }
+
+  .mobileNavList li + li {
+    margin-top: 10px;
+  }
+
+  .mobileMenuPanel.is-open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  .mobileMenuPanelInner {
+    border: 1px solid rgba(32, 38, 37, 0.08);
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at top left, rgba(207, 244, 207, 0.72), transparent 42%),
+      linear-gradient(180deg, rgba(252, 253, 250, 0.98) 0%, rgba(242, 245, 240, 0.98) 100%);
+    box-shadow: 0 28px 56px rgba(20, 32, 28, 0.22);
+    padding: 18px 14px 14px;
+  }
+
+  .mobileMenuTopRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .mobileMenuEyebrow {
+    margin: 0;
+    color: #5d6a65;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .mobileMenuClose {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(32, 38, 37, 0.08);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.88);
+    flex: 0 0 auto;
+  }
+
+  .mobileMenuClose span {
+    position: absolute;
+    top: 18px;
+    left: 11px;
+    width: 14px;
+    height: 2px;
+    border-radius: 999px;
+    background: #1f2622;
+  }
+
+  .mobileMenuClose span:first-child {
+    transform: rotate(45deg);
+  }
+
+  .mobileMenuClose span:last-child {
+    transform: rotate(-45deg);
+  }
+
+  .mobileNavList {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .mobileNavList a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 16px;
+    padding: 14px 16px;
+    color: #21312c;
+    font-size: 1rem;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: inset 0 0 0 1px rgba(32, 38, 37, 0.05);
+  }
+
+  .mobileNavList a::after {
+    content: ">";
+    color: #6b7c75;
+    font-size: 0.95rem;
+  }
+
+  .mobileMenuCta {
+    width: 100%;
+    margin: 14px 0 0;
+    justify-content: center;
+    padding: 14px 18px;
+    font-size: 0.98rem;
+  }
 }
 
 .footerBrandBlock {
