@@ -49,7 +49,7 @@ personalized insights designed just for you."
             <article key={step.title} className={styles.card}>
               <div className={styles.iconTile}>
                 <Image
-                  src={`/images/step-${index + 1}.png`}
+                  src={`/images/step-${index + 1}.svg`}
                   alt=""
                   width={32}
                   height={32}

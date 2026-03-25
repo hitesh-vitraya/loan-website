@@ -1,17 +1,26 @@
 "use client";
 
 import Image from "next/image";
-import { ChangeEvent, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ChangeEvent, useMemo, useRef, useState } from "react";
 
 import { applicationSteps } from "../../data/application";
+import { useFormDropOffTracker } from "../../hooks/useFormDropOffTracker";
+import {
+  APPLICATION_FUNNEL_FIELD_COUNT,
+  APPLICATION_FUNNEL_ID,
+  APPLICATION_FUNNEL_NAME
+} from "../../lib/form-drop-off";
 import {
   ApplicationFormData,
   getApplicationFieldErrors,
   getCompletedApplicationFieldCount,
   initialApplicationFormState,
   isApplicationStepValid,
-  namePattern
+  isLoanAmountValid
 } from "../../lib/application-form";
+import { trackLoanApplicationCompleted } from "../../lib/gtag";
+import { readStoredUtmParams } from "../../lib/utm";
 
 import styles from "./ApplicationWizard.module.css";
 
@@ -22,30 +31,66 @@ type ApplicationWizardProps = {
 };
 
 export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps) {
+  const router = useRouter();
+  const normalizedInitialLoanAmount =
+    initialLoanAmount && isLoanAmountValid(initialLoanAmount) ? initialLoanAmount : "";
+  const shouldAskLoanAmount = !normalizedInitialLoanAmount;
   const [stepIndex, setStepIndex] = useState(0);
   const [formState, setFormState] = useState<ApplicationFormData>(() => ({
     ...initialApplicationFormState,
-    loanAmount: initialLoanAmount ?? initialApplicationFormState.loanAmount
+    loanAmount: normalizedInitialLoanAmount
   }));
   const [submitted, setSubmitted] = useState(false);
   const [attemptedSteps, setAttemptedSteps] = useState<Record<number, boolean>>({});
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [asyncFieldErrors, setAsyncFieldErrors] = useState<FieldErrors>({});
+  const formContainerRef = useRef<HTMLDivElement>(null);
 
-  const step = applicationSteps[stepIndex];
+  const isLoanAmountStep = shouldAskLoanAmount && stepIndex === 0;
+  const step = isLoanAmountStep
+    ? null
+    : applicationSteps[shouldAskLoanAmount ? stepIndex - 1 : stepIndex];
+  const totalStepCount = applicationSteps.length + (shouldAskLoanAmount ? 1 : 0);
+  const isFinalStep = stepIndex === totalStepCount - 1;
+  const currentTitle = isLoanAmountStep ? "How much would you like to borrow?" : step?.title ?? "";
+  const currentSubtitle = isLoanAmountStep
+    ? "Start with the amount you need so we can tailor the rest of the application."
+    : step?.subtitle ?? "";
 
   const completedFieldCount = useMemo(
-    () => getCompletedApplicationFieldCount(formState),
+    () => getCompletedApplicationFieldCount(formState, { includeLoanAmount: true }),
     [formState]
   );
 
-  const totalFieldCount = 20;
+  const totalFieldCount = APPLICATION_FUNNEL_FIELD_COUNT;
   const progressPercent = Math.round((completedFieldCount / totalFieldCount) * 100);
+  const funnelStepNumber = isLoanAmountStep ? 1 : stepIndex + 2;
+
+  const { markFieldInteraction, markFormCompleted, prepareForInternalNavigation } =
+    useFormDropOffTracker({
+      formId: APPLICATION_FUNNEL_ID,
+      formName: APPLICATION_FUNNEL_NAME,
+      pageStage: "apply",
+      currentStep: funnelStepNumber,
+      progressPercentage: progressPercent,
+      isCompleted: submitted,
+      formRef: formContainerRef
+    });
 
   const allFieldErrors = useMemo(() => getApplicationFieldErrors(formState), [formState]);
 
   const fieldErrors: FieldErrors = useMemo(() => {
+    if (isLoanAmountStep) {
+      return {
+        loanAmount: allFieldErrors.loanAmount
+      };
+    }
+
+    if (!step) {
+      return {};
+    }
+
     switch (step.kind) {
       case "purpose":
         return {
@@ -103,11 +148,11 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
       default:
         return {};
     }
-  }, [allFieldErrors, step.kind]);
+  }, [allFieldErrors, isLoanAmountStep, step]);
 
   const isCurrentStepValid = useMemo(
-    () => isApplicationStepValid(step.kind, formState),
-    [formState, step.kind]
+    () => (isLoanAmountStep ? isLoanAmountValid(formState.loanAmount) : Boolean(step && isApplicationStepValid(step.kind, formState))),
+    [formState, isLoanAmountStep, step]
   );
 
   const handleTextChange =
@@ -116,6 +161,10 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
       let nextValue = event.target.value;
 
       if (field === "zipCode") {
+        nextValue = nextValue.replace(/\D/g, "").slice(0, 5);
+      }
+
+      if (field === "loanAmount") {
         nextValue = nextValue.replace(/\D/g, "").slice(0, 5);
       }
 
@@ -164,6 +213,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
         ...current,
         [field]: nextValue
       }));
+      markFieldInteraction(field);
 
       setAsyncFieldErrors((current) => ({
         ...current,
@@ -176,6 +226,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
       ...current,
       [field]: value
     }));
+    markFieldInteraction(field);
   };
 
   const handleConsentToggle = () => {
@@ -183,9 +234,16 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
       ...current,
       phoneConsent: !current.phoneConsent
     }));
+    markFieldInteraction("phoneConsent");
   };
 
   const goBack = () => {
+    if (stepIndex === 0) {
+      prepareForInternalNavigation();
+      router.push("/");
+      return;
+    }
+
     setStepIndex((current) => Math.max(current - 1, 0));
   };
 
@@ -199,7 +257,10 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(formState)
+        body: JSON.stringify({
+          ...formState,
+          ...readStoredUtmParams()
+        })
       });
 
       const payload = (await response.json()) as {
@@ -211,6 +272,18 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
         setSubmitError(payload.error ?? "Unable to save your application right now.");
         setAttemptedSteps((current) => ({ ...current, [stepIndex]: true }));
         return;
+      }
+
+      trackLoanApplicationCompleted({
+        loan_amount: Number(formState.loanAmount || "0"),
+        step_number: funnelStepNumber,
+        progress_percentage: progressPercent
+      });
+
+      try {
+        await markFormCompleted();
+      } catch (analyticsError) {
+        console.error("Failed to save form completion analytics", analyticsError);
       }
 
       setSubmitted(true);
@@ -228,7 +301,13 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
       return;
     }
 
-    if (step.kind === "purpose") {
+    if (isLoanAmountStep) {
+      setSubmitError("");
+      setStepIndex((current) => current + 1);
+      return;
+    }
+
+    if (step?.kind === "purpose") {
       setIsSubmitting(true);
 
       try {
@@ -278,7 +357,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
       }
     }
 
-    if (stepIndex === applicationSteps.length - 1) {
+    if (isFinalStep) {
       await submitApplication();
       return;
     }
@@ -316,18 +395,37 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
           </div>
         </div>
 
-        <div className={styles.body}>
+        <div className={styles.body} ref={formContainerRef}>
           <div className={styles.iconWrap}>
             <Image src="/images/form-icon.png" alt="" width={19} height={19} />
           </div>
-          <h2 className={styles.title}>{step.title}</h2>
-          <p className={styles.subtitle}>{step.subtitle}</p>
+          <h2 className={styles.title}>{currentTitle}</h2>
+          <p className={styles.subtitle}>{currentSubtitle}</p>
 
-          {step.kind === "purpose" ? (
+          {isLoanAmountStep ? (
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel}>Desired loan amount</label>
+              <input
+                className={styles.input}
+                type="text"
+                name="loanAmount"
+                inputMode="numeric"
+                placeholder="100 - 40000"
+                value={formState.loanAmount}
+                onChange={handleTextChange("loanAmount")}
+              />
+              {attemptedSteps[stepIndex] && fieldErrors.loanAmount ? (
+                <p className={styles.fieldError}>{fieldErrors.loanAmount}</p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {step?.kind === "purpose" ? (
             <>
               <div className={styles.fieldGroup}>
                 <select
                   className={styles.select}
+                  name="loanPurpose"
                   value={formState.loanPurpose}
                   onChange={handleTextChange("loanPurpose")}
                 >
@@ -348,6 +446,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
                 <input
                   className={styles.input}
                   type="text"
+                  name="zipCode"
                   inputMode="numeric"
                   placeholder="e.g. 90201"
                   value={formState.zipCode}
@@ -362,12 +461,13 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
             </>
           ) : null}
 
-          {step.kind === "credit" ? (
+          {step?.kind === "credit" ? (
             <div className={styles.stack}>
               {step.options.map((option) => (
                 <button
                   key={option.value}
                   type="button"
+                  data-track-field="creditScore"
                   className={
                     formState.creditScore === option.value
                       ? `${styles.choiceButton} ${styles.choiceButtonActive}`
@@ -384,7 +484,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
             </div>
           ) : null}
 
-          {step.kind === "employment" ? (
+          {step?.kind === "employment" ? (
             <>
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel}>Employment status</label>
@@ -393,6 +493,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
                     <button
                       key={option.value}
                       type="button"
+                      data-track-field="employmentStatus"
                       className={
                         formState.employmentStatus === option.value
                           ? `${styles.choiceButton} ${styles.choiceButtonActive}`
@@ -416,6 +517,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
                     <button
                       key={option.value}
                       type="button"
+                      data-track-field="payFrequency"
                       className={
                         formState.payFrequency === option.value
                           ? `${styles.choiceGridButton} ${styles.choiceGridButtonActive}`
@@ -434,13 +536,14 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
             </>
           ) : null}
 
-          {step.kind === "financial" ? (
+          {step?.kind === "financial" ? (
             <>
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel}>Monthly income (before taxes)</label>
                 <input
                   className={styles.input}
                   type="text"
+                  name="monthlyIncome"
                   inputMode="numeric"
                   placeholder="$3,500"
                   value={formState.monthlyIncome}
@@ -458,6 +561,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
                     <button
                       key={option.value}
                       type="button"
+                      data-track-field="housingStatus"
                       className={
                         formState.housingStatus === option.value
                           ? `${styles.choiceGridButton} ${styles.choiceGridButtonActive}`
@@ -476,7 +580,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
             </>
           ) : null}
 
-          {step.kind === "banking" ? (
+          {step?.kind === "banking" ? (
             <>
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel}>Do you have a checking account?</label>
@@ -485,6 +589,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
                     <button
                       key={`checking-${option.value}`}
                       type="button"
+                      data-track-field="hasCheckingAccount"
                       className={
                         formState.hasCheckingAccount === option.value
                           ? `${styles.choiceGridButton} ${styles.choiceGridButtonActive}`
@@ -508,6 +613,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
                     <button
                       key={`deposit-${option.value}`}
                       type="button"
+                      data-track-field="hasDirectDeposit"
                       className={
                         formState.hasDirectDeposit === option.value
                           ? `${styles.choiceGridButton} ${styles.choiceGridButtonActive}`
@@ -526,7 +632,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
             </>
           ) : null}
 
-          {step.kind === "qualifiers" ? (
+          {step?.kind === "qualifiers" ? (
             <>
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel}>
@@ -537,6 +643,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
                     <button
                       key={`vehicle-${option.value}`}
                       type="button"
+                      data-track-field="hasVehicleRegistration"
                       className={
                         formState.hasVehicleRegistration === option.value
                           ? `${styles.choiceGridButton} ${styles.choiceGridButtonActive}`
@@ -560,6 +667,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
                     <button
                       key={option.value}
                       type="button"
+                      data-track-field="militaryAffiliation"
                       className={
                         formState.militaryAffiliation === option.value
                           ? `${styles.choiceGridButton} ${styles.choiceGridButtonActive}`
@@ -578,12 +686,13 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
             </>
           ) : null}
 
-          {step.kind === "debt" ? (
+          {step?.kind === "debt" ? (
             <div className={styles.choiceGrid}>
               {step.options.map((option) => (
                 <button
                   key={option.value}
                   type="button"
+                  data-track-field="unsecuredDebt"
                   className={
                     formState.unsecuredDebt === option.value
                       ? `${styles.choiceGridButton} ${styles.choiceGridButtonActive}`
@@ -600,12 +709,13 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
             </div>
           ) : null}
 
-          {step.kind === "phone" ? (
+          {step?.kind === "phone" ? (
             <>
               <div className={styles.fieldGroup}>
                 <input
                   className={styles.input}
                   type="tel"
+                  name="phoneNumber"
                   inputMode="numeric"
                   placeholder="(555) 123-4567"
                   value={formState.phoneNumber}
@@ -618,6 +728,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
               <label className={styles.checkboxRow}>
                 <input
                   type="checkbox"
+                  name="phoneConsent"
                   checked={formState.phoneConsent}
                   onChange={handleConsentToggle}
                 />
@@ -633,13 +744,14 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
             </>
           ) : null}
 
-          {step.kind === "identity" ? (
+          {step?.kind === "identity" ? (
             <>
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel}>Date of birth</label>
                 <input
                   className={styles.input}
                   type="text"
+                  name="dateOfBirth"
                   inputMode="numeric"
                   placeholder="DD-MM-YYYY"
                   value={formState.dateOfBirth}
@@ -654,6 +766,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
                 <input
                   className={styles.input}
                   type="text"
+                  name="streetAddress"
                   placeholder="123, Main Street"
                   value={formState.streetAddress}
                   onChange={handleTextChange("streetAddress")}
@@ -665,11 +778,12 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
             </>
           ) : null}
 
-          {step.kind === "ssn" ? (
+          {step?.kind === "ssn" ? (
             <div className={styles.fieldGroup}>
               <input
                 className={styles.input}
                 type="text"
+                name="ssn"
                 inputMode="numeric"
                 placeholder="XXX-XX-XXXX"
                 value={formState.ssn}
@@ -686,13 +800,14 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
             </div>
           ) : null}
 
-          {step.kind === "profile" ? (
+          {step?.kind === "profile" ? (
             <>
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel}>First name</label>
                 <input
                   className={styles.input}
                   type="text"
+                  name="firstName"
                   placeholder="John"
                   value={formState.firstName}
                   onChange={handleTextChange("firstName")}
@@ -707,6 +822,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
                 <input
                   className={styles.input}
                   type="text"
+                  name="lastName"
                   placeholder="Smith"
                   value={formState.lastName}
                   onChange={handleTextChange("lastName")}
@@ -721,6 +837,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
                 <input
                   className={styles.input}
                   type="email"
+                  name="email"
                   placeholder="john@gmail.com"
                   value={formState.email}
                   onChange={handleTextChange("email")}
@@ -739,9 +856,8 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
               type="button"
               className={styles.backButton}
               onClick={goBack}
-              disabled={stepIndex === 0}
             >
-              {"<<"} Back
+              {stepIndex === 0 ? "<< Home" : "<< Back"}
             </button>
             <button
               type="button"

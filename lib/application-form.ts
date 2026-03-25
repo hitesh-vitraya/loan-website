@@ -163,7 +163,12 @@ export function isApplicationStepValid(
   }
 }
 
-export function getCompletedApplicationFieldCount(formData: ApplicationFormData) {
+export function getCompletedApplicationFieldCount(
+  formData: ApplicationFormData,
+  options?: {
+    includeLoanAmount?: boolean;
+  }
+) {
   const errors = getApplicationFieldErrors(formData);
 
   const trackedFields: Array<keyof ApplicationFormData> = [
@@ -188,6 +193,10 @@ export function getCompletedApplicationFieldCount(formData: ApplicationFormData)
     "streetAddress",
     "ssn"
   ];
+
+  if (options?.includeLoanAmount) {
+    trackedFields.unshift("loanAmount");
+  }
 
   return trackedFields.filter((field) => !errors[field]).length;
 }

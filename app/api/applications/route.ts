@@ -5,6 +5,7 @@ import {
   getApplicationFieldErrors,
   isLoanAmountValid
 } from "../../../lib/application-form";
+import type { UtmParams } from "../../../lib/utm";
 import { submitLeadApi } from "../../../lib/lead-api";
 import { getSafeMongoCollectionName } from "../../../lib/mongo-collection-name";
 import { getMongoCollection } from "../../../lib/mongodb";
@@ -21,6 +22,8 @@ const logsCollectionName = getSafeMongoCollectionName(
   configuredLogsCollectionName,
   "loan_application_api_logs"
 );
+
+type ApplicationSubmissionPayload = ApplicationFormData & UtmParams;
 
 function getClientIp(request: NextRequest) {
   const forwardedFor = request.headers.get("x-forwarded-for");
@@ -46,7 +49,7 @@ function getInvalidFieldEntries(formData: ApplicationFormData) {
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = (await request.json()) as ApplicationFormData;
+    const formData = (await request.json()) as ApplicationSubmissionPayload;
     const invalidFieldEntries = getInvalidFieldEntries(formData);
 
     if (invalidFieldEntries.length > 0) {
@@ -119,6 +122,9 @@ export async function POST(request: NextRequest) {
       dateOfBirth: enrichedFormData.dateOfBirth,
       streetAddress: enrichedFormData.streetAddress.trim(),
       ssn: enrichedFormData.ssn,
+      utmSource: formData.utmSource?.trim() || null,
+      utmMedium: formData.utmMedium?.trim() || null,
+      utmCampaign: formData.utmCampaign?.trim() || null,
       userAgent,
       ipAddress,
       leadApiStatus: "pending",

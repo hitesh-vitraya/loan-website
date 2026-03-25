@@ -17,7 +17,7 @@ export function FeaturesSection() {
           {features.map((feature) => (
             <article key={feature.title} className="featureCard">
               <div className="iconBadge">
-                <Image src="/images/form-icon.png" alt="" width={14} height={14} />
+                <Image src="/images/dollar.svg" alt="" width={14} height={14} />
               </div>
               <h3 className="featureTitle">{feature.title}</h3>
               <p className="featureBody">{feature.description}</p>

@@ -1,18 +1,52 @@
 "use client";
 
-import { ChangeEvent, MouseEvent, useState } from "react";
+import { ChangeEvent, MouseEvent, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 
+import { useFormDropOffTracker } from "../../hooks/useFormDropOffTracker";
+import {
+  APPLICATION_FUNNEL_FIELD_COUNT,
+  APPLICATION_FUNNEL_ID,
+  APPLICATION_FUNNEL_NAME
+} from "../../lib/form-drop-off";
+import {
+  ApplicationFormData,
+  getCompletedApplicationFieldCount,
+  initialApplicationFormState,
+  isLoanAmountValid
+} from "../../lib/application-form";
 import { Button } from "../ui/Button";
 import { Container } from "../ui/Container";
 
 function QualifierCard() {
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
+  const formRef = useRef<HTMLDivElement>(null);
+  const formState = useMemo<ApplicationFormData>(
+    () => ({
+      ...initialApplicationFormState,
+      loanAmount: amount
+    }),
+    [amount]
+  );
+  const progressPercent = Math.round(
+    (getCompletedApplicationFieldCount(formState, { includeLoanAmount: true }) /
+      APPLICATION_FUNNEL_FIELD_COUNT) *
+      100
+  );
+  const { markFieldInteraction, prepareForInternalNavigation } = useFormDropOffTracker({
+    formId: APPLICATION_FUNNEL_ID,
+    formName: APPLICATION_FUNNEL_NAME,
+    pageStage: "home",
+    currentStep: 1,
+    progressPercentage: progressPercent,
+    formRef
+  });
 
   const handleAmountChange = (event: ChangeEvent<HTMLInputElement>) => {
     const numericValue = event.target.value.replace(/\D/g, "");
     setAmount(numericValue);
+    markFieldInteraction("loanAmount");
     if (error) {
       setError("");
     }
@@ -24,13 +58,19 @@ function QualifierCard() {
     if (!amount || Number.isNaN(parsedAmount) || parsedAmount < 100 || parsedAmount > 40000) {
       event.preventDefault();
       setError("Enter an amount between 100 and 40000.");
+      markFieldInteraction("loanAmount");
+      return;
+    }
+
+    if (isLoanAmountValid(amount)) {
+      prepareForInternalNavigation();
     }
   };
 
   return (
-    <div className="qualifierCard">
+    <div className="qualifierCard" ref={formRef}>
       <div className="qualifierIcon">
-        <Image src="/images/form-icon.png" alt="" width={10} height={10} />
+        <Image src="/images/dollar.svg" alt="" width={10} height={10} />
       </div>
       <p className="qualifierTitle">See what you qualify for</p>
       <p className="qualifierSubtitle">Takes about 2 minutes. No credit impact</p>
@@ -42,6 +82,7 @@ function QualifierCard() {
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
+          name="loanAmount"
           placeholder=""
           aria-label="Loan amount"
           className="qualifierInput"

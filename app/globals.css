@@ -1509,6 +1509,7 @@ img {
 
   .heroTitle {
     font-size: 1.8rem;
+    text-shadow: 1px 1px 0 #dddddd, 1px 5px 5px #8a8a8a;
   }
   .siteLogoImage{
     width:150px;
@@ -1526,33 +1527,38 @@ img {
     text-align: center;
   }
   .heroDescription {
-        font-size: 10px;
+        font-size: 11px;
+        margin-top: 15px;
+        margin-bottom: 15px;
+        text-shadow: 1px 1px 0 #dddddd, 1px 5px 5px #8a8a8a;
   }
 
   .heroPill {
     font-size: 9px;
     padding: 7px 12px;
+    margin-top:10px;
+    margin-bottom:10px;
   }
 
   .qualifierCard {
     width: 270px;
     padding:10px;
     margin-top:5px;
-    margin: 5px auto;
+    margin: 15px auto;
   }
  .heroBackdrop{
   height:450px;
  }
   .qualifierTitle {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .qualifierSubtitle {
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .qualifierLabel {
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .qualifierCurrency,
@@ -1561,7 +1567,7 @@ img {
   }
 
   .qualifierBody {
-    font-size: 6px;
+    font-size: 8px;
   }
 
   .qualifierButton {
@@ -1571,7 +1577,7 @@ img {
   }
 
   #about{
-    margin-top:80px;
+    margin-top:160px;
   }
   .sectionTitle{
     font-size: 1.8rem;

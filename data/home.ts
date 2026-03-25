@@ -95,19 +95,19 @@ export const faqs: FaqItem[] = [
       "No. Bad Credit is fully transparent. You’ll see all applicable fees upfront, and we strive to keep costs low or free where possible."
   },
   {
-    question: "Can I send money internationally?",
+    question: "How Soon Can A Personal Loan Or Cash Advance Be Made Available?",
     answer:
-      "International transfers depend on your chosen lender and payout method. Most offers focus on domestic disbursement."
+      "The time it takes to process a loan and transfer or ACH funds into an individual's account varies with each loan company, and also depends on the financial institution where the customer has their bank account. However, approved individuals can often receive their loan as soon as the next business day after approval."
   },
   {
-    question: "What banks or wallets can I connect?",
+    question: "How Much Can I Receive?",
     answer:
-      "Most major U.S. banks are supported. Some providers may also allow alternative payout or verification methods."
+      "Qualified loan amounts can vary and are based on personal eligibility. Approved loan amounts can range between $100 to $40,000."
   },
   {
-    question: "How can I get support if I need help?",
+    question: "What Are Personal Loans Or Installment Loans?",
     answer:
-      "Use the contact section below to reach the support team for questions about applications, offers, or next steps."
+      "Personal and/or installment loans typically range between $100 and $40,000. They can be used for many different purposes. Personal loans are commonly called installment loans because they are typically paid back in monthly or bi-monthly installments over an extended period of time. They can be a convenient alternative to bank loans or high-interest credit cards, with online loan request forms and no-hassle automated repayment."
   }
 ];
 
