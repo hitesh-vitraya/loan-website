@@ -1541,7 +1541,7 @@ img {
   }
 
   .qualifierCard {
-    width: 270px;
+    width: 90%;
     padding:10px;
     margin-top:5px;
     margin: 15px auto;
@@ -1549,16 +1549,24 @@ img {
  .heroBackdrop{
   height:450px;
  }
+ .qualifierIcon{
+  height: 45px;
+  width: 45px;
+ }
+ .qualifierIcon img {
+    width: 35px;
+    height: 35px;
+}
   .qualifierTitle {
-    font-size: 14px;
+    font-size: 18px;
   }
 
   .qualifierSubtitle {
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .qualifierLabel {
-    font-size: 12px;
+    font-size: 16px;
   }
 
   .qualifierCurrency,
@@ -1567,17 +1575,17 @@ img {
   }
 
   .qualifierBody {
-    font-size: 8px;
+    font-size: 10px;
   }
 
   .qualifierButton {
-    width: 150px;
-    font-size: 10px;
+    width: 170px;
+    font-size: 16px;
     padding: 10px 12px;
   }
 
   #about{
-    margin-top:160px;
+    margin-top:235px;
   }
   .sectionTitle{
     font-size: 1.8rem;
