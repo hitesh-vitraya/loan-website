@@ -72,8 +72,8 @@ function QualifierCard() {
       <div className="qualifierIcon">
         <Image src="/images/dollar.svg" alt="" width={10} height={10} />
       </div>
-      <p className="qualifierTitle">See what you qualify for</p>
-      <p className="qualifierSubtitle">Takes about 2 minutes. No credit impact</p>
+      {/* <p className="qualifierTitle">See what you qualify for</p> */}
+      <p className="qualifierTitle">Takes about 2 minutes. No credit impact</p>
 
       <label className="qualifierLabel">How much do you need?</label>
       <div className="qualifierInputWrap">
