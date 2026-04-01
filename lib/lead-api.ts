@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 
 import { ApplicationFormData, getPhoneDigits } from "./application-form";
+import type { UtmParams } from "./utm";
 
 export type LeadApiPayload = Record<string, string>;
 
@@ -12,6 +13,8 @@ export type LeadApiResult = {
   responseHeaders: Record<string, string>;
   durationMs: number;
 };
+
+type LeadSubmissionData = ApplicationFormData & UtmParams;
 
 function getRequiredLeadEnv(name: string) {
   const value = process.env[name];
@@ -30,7 +33,7 @@ function formatDateOfBirth(dateOfBirth: string) {
     return "";
   }
 
-  const [day, month, year] = parts;
+  const [month, day, year] = parts;
   return `${month}/${day}/${year}`;
 }
 
@@ -164,7 +167,12 @@ function getSourceUrl() {
   return host ? `https://${host}` : "";
 }
 
-export function buildLeadApiPayload(formData: ApplicationFormData, userAgent: string, ipAddress: string) {
+export function buildLeadApiPayload(
+  formData: LeadSubmissionData,
+  userAgent: string,
+  ipAddress: string,
+  isMobile: boolean
+) {
   const phoneDigits = getPhoneDigits(formData.phoneNumber);
 
   return {
@@ -178,12 +186,12 @@ export function buildLeadApiPayload(formData: ApplicationFormData, userAgent: st
     Affiliate_ID: getRequiredLeadEnv("LEAD_API_AFFILIATE_ID"),
     SRC: getRequiredLeadEnv("LEAD_API_SRC"),
     Campaign_ID: getRequiredLeadEnv("LEAD_API_CAMPAIGN_ID"),
-    Pub_ID: getRequiredLeadEnv("LEAD_API_PUB_ID"),
+    Pub_ID: formData.utmCampaign?.trim() || getRequiredLeadEnv("LEAD_API_PUB_ID"),
     Sub_ID: process.env.LEAD_API_SUB_ID ?? "",
     Sub_ID_2: process.env.LEAD_API_SUB_ID_2 ?? "",
     SourceUrl: getSourceUrl(),
     IP_Address: ipAddress,
-    Mobile: "Yes",
+    Mobile: isMobile ? "Yes" : "No",
     User_Agent: userAgent,
     Consent: formData.phoneConsent ? "Yes" : "No",
     ConsentFCRA: "Yes",
@@ -218,12 +226,13 @@ export function buildLeadApiPayload(formData: ApplicationFormData, userAgent: st
 }
 
 export async function submitLeadApi(
-  formData: ApplicationFormData,
+  formData: LeadSubmissionData,
   userAgent: string,
-  ipAddress: string
+  ipAddress: string,
+  isMobile: boolean
 ): Promise<LeadApiResult> {
   const url = getRequiredLeadEnv("LEAD_API_URL");
-  const requestPayload = buildLeadApiPayload(formData, userAgent, ipAddress);
+  const requestPayload = buildLeadApiPayload(formData, userAgent, ipAddress, isMobile);
   const body = new URLSearchParams(requestPayload);
   const startedAt = Date.now();
 

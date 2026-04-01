@@ -753,7 +753,7 @@ export function ApplicationWizard({ initialLoanAmount }: ApplicationWizardProps)
                   type="text"
                   name="dateOfBirth"
                   inputMode="numeric"
-                  placeholder="DD-MM-YYYY"
+                  placeholder="MM-DD-YYYY"
                   value={formState.dateOfBirth}
                   onChange={handleTextChange("dateOfBirth")}
                 />

@@ -66,7 +66,7 @@ export const initialApplicationFormState: ApplicationFormData = {
 export const namePattern = /^[A-Za-z][A-Za-z\s'-]{1,19}$/;
 export const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const zipPattern = /^\d{5}$/;
-export const dobPattern = /^(0[1-9]|[12]\d|3[01])-(0[1-9]|1[0-2])-\d{4}$/;
+export const dobPattern = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])-\d{4}$/;
 export const ssnPattern = /^\d{3}-\d{2}-\d{4}$/;
 
 export type ApplicationFieldErrors = Partial<Record<keyof ApplicationFormData, string>>;
@@ -123,7 +123,7 @@ export function getApplicationFieldErrors(formData: ApplicationFormData): Applic
     phoneConsent: formData.phoneConsent ? "" : "Please provide consent to continue.",
     dateOfBirth: dobPattern.test(formData.dateOfBirth)
       ? ""
-      : "Enter date of birth in DD-MM-YYYY format.",
+      : "Enter date of birth in MM-DD-YYYY format.",
     streetAddress: formData.streetAddress.trim().length > 4 ? "" : "Enter a valid street address.",
     ssn: ssnPattern.test(formData.ssn) ? "" : "Enter your SSN in XXX-XX-XXXX format."
   };

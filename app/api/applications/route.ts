@@ -35,6 +35,22 @@ function getClientIp(request: NextRequest) {
   return request.headers.get("x-real-ip") ?? "";
 }
 
+function isMobileSubmission(request: NextRequest, userAgent: string) {
+  const secChUaMobile = request.headers.get("sec-ch-ua-mobile");
+
+  if (secChUaMobile === "?1") {
+    return true;
+  }
+
+  if (secChUaMobile === "?0") {
+    return false;
+  }
+
+  return /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(
+    userAgent
+  );
+}
+
 function getInvalidFieldEntries(formData: ApplicationFormData) {
   const fieldErrors = getApplicationFieldErrors(formData);
 
@@ -76,6 +92,7 @@ export async function POST(request: NextRequest) {
 
     const userAgent = request.headers.get("user-agent") ?? "";
     const ipAddress = getClientIp(request);
+    const isMobile = isMobileSubmission(request, userAgent);
     const applicationsCollection = await getMongoCollection(applicationsCollectionName);
     const logsCollection = await getMongoCollection(logsCollectionName);
     const location = await lookupUsZip(formData.zipCode);
@@ -148,7 +165,7 @@ export async function POST(request: NextRequest) {
       | undefined;
 
     try {
-      leadApiResult = await submitLeadApi(enrichedFormData, userAgent, ipAddress);
+      leadApiResult = await submitLeadApi(enrichedFormData, userAgent, ipAddress, isMobile);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown lead API error.";
 
