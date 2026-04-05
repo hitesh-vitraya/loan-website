@@ -3,6 +3,11 @@ import { Footer } from "../../components/sections/Footer";
 import { Container } from "../../components/ui/Container";
 import { termsPageMeta, termsPageSections } from "../../data/terms-page";
 
+const sectionAnchors: Record<string, string> = {
+  "Arbitration Notice": "arbitration-notice",
+  "Electronic Consent": "electronic-consent"
+};
+
 export default function TermsAndConditionPage() {
   return (
     <main>
@@ -17,7 +22,11 @@ export default function TermsAndConditionPage() {
 
           <div className="legalPageContent">
             {termsPageSections.map((section) => (
-              <section key={section.heading} className="legalPageSection">
+              <section
+                key={section.heading}
+                id={sectionAnchors[section.heading]}
+                className="legalPageSection"
+              >
                 <h2 className="legalPageSectionTitle">{section.heading}</h2>
                 {section.paragraphs.map((paragraph, index) => (
                   <p key={`${section.heading}-${index}`}>{paragraph}</p>

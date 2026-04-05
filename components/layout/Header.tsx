@@ -57,7 +57,9 @@ export function Header() {
               ))}
             </ul>
           </nav>
-          <Button className="headerButton">Check my Options</Button>
+          <Button href="/#request-now" className="headerButton">
+            Check my Options
+          </Button>
         </div>
 
         <button
@@ -116,7 +118,7 @@ export function Header() {
                 </ul>
               </nav>
 
-              <Button href="/apply" className="mobileMenuCta" onClick={closeMobileMenu}>
+              <Button href="/#request-now" className="mobileMenuCta" onClick={closeMobileMenu}>
                 Check my Options
               </Button>
             </div>

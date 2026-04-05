@@ -1163,6 +1163,16 @@ img {
   text-align: justify;;
 }
 
+.qualifierInlineLink {
+  color: #214e3d;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.qualifierInlineLink:hover {
+  color: #17372d;
+}
+
 .qualifierButton {
   width: 206px;
   min-width: auto;
@@ -2236,6 +2246,10 @@ body {
 
 .legalPageSection + .legalPageSection {
   margin-top: 28px;
+}
+
+.legalPageSection[id] {
+  scroll-margin-top: 110px;
 }
 
 .legalPageSectionTitle {

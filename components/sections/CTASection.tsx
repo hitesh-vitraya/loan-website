@@ -6,7 +6,9 @@ export function CTASection() {
     <section id="cta" className="ctaSection">
       <Container className="ctaInner sectionRail">
         <h2 className="ctaTitle">Request your loan in less than 2 minutes!</h2>
-        <Button className="ctaButton">Check my Options</Button>
+        <Button href="/#request-now" className="ctaButton">
+          Check my Options
+        </Button>
       </Container>
     </section>
   );

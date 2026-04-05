@@ -2,6 +2,7 @@
 
 import { ChangeEvent, MouseEvent, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 import { useFormDropOffTracker } from "../../hooks/useFormDropOffTracker";
 import {
@@ -68,7 +69,7 @@ function QualifierCard() {
   };
 
   return (
-    <div className="qualifierCard" ref={formRef}>
+    <div id="request-now" className="qualifierCard" ref={formRef}>
       <div className="qualifierIcon">
         <Image src="/images/dollar.svg" alt="" width={10} height={10} />
       </div>
@@ -98,11 +99,25 @@ function QualifierCard() {
       ) : null}
 
       <p className="qualifierBody">
-        By clicking &quot;Request Now&quot;, you agree to our Privacy Policy, Terms of Service,
-        E-Consent, Arbitration Notice, and the use of Session Replay Technology. You also
-        understand that if you are not connected with a Lender or Lending Partner, you may be
-        connected with other financial service providers that offer products and services for
-        financial help.
+        By clicking &quot;Request Now&quot;, you agree to our{" "}
+        <Link href="/privacy-policy" className="qualifierInlineLink">
+          Privacy Policy
+        </Link>
+        ,{" "}
+        <Link href="/terms-and-condition" className="qualifierInlineLink">
+          Terms of Service
+        </Link>
+        ,{" "}
+        <Link href="/terms-and-condition#electronic-consent" className="qualifierInlineLink">
+          E-Consent
+        </Link>
+        ,{" "}
+        <Link href="/terms-and-condition#arbitration-notice" className="qualifierInlineLink">
+          Arbitration Notice
+        </Link>
+        , and the use of Session Replay Technology. You also understand that if you are not
+        connected with a Lender or Lending Partner, you may be connected with other financial
+        service providers that offer products and services for financial help.
       </p>
 
       <div style={{ display: "flex", justifyContent: "center" }}>
